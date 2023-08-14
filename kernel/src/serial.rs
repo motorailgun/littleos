@@ -4,7 +4,7 @@ pub struct SerialPort {
     port: u16,
 }
 
-static init_complete_message: &[u8] = b"Serial port initialized!\n";
+static INIT_COMPLETE_MESSAGE: &[u8] = b"Serial port initialized!\n";
 const SERIAL_PORT_RATE: u8 = (115200u32 / 9600) as u8;
 
 // serial port setup, basically based on OSDev wiki:
@@ -31,7 +31,7 @@ pub fn new(port: u16) -> Option<SerialPort> {
     }
 
     let sp = SerialPort { port };
-    sp.write_bytes(init_complete_message);
+    sp.write_bytes(INIT_COMPLETE_MESSAGE);
 
     Some(sp)
 }
