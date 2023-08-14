@@ -22,11 +22,12 @@ impl SerialPort {
             outb(port + 4, 0x1E); // Set in loopback mode, test the serial chip
             outb(port + 0, 0xAE); // Test serial chip (send byte 0xAE and check if serial returns same byte)
 
-            if inb(port + 5) != 0xAE {
+            if inb(port + 0) != 0xAE {
                 // check if the serial port is faulty
                 return None;
             }
 
+            // not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled
             outb(port + 4, 0x0F);
         }
 
