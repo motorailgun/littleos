@@ -2,20 +2,26 @@
 #![no_main]
 
 mod serial;
-
 use core::panic::PanicInfo;
+const SERIAL_PORT_ADDRESS: u16 = 0x3f8;
 
 #[panic_handler]
 pub fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-static HELLO: &[u8] = b"\n\n\tHello World!\n\n";
-const SERIAL_PORT_ADDRESS: u16 = 0x3f8;
+fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
+    serial::WRITER.lock().get_or_init(|| serial::new(SERIAL_PORT_ADDRESS).unwrap());
+    println!("\n\n\tHello World!\n\n");
 
-fn kernel_entry(_boot_info: &'static mut bootloader_api::BootInfo) -> ! {
-    let serial_port = serial::new(SERIAL_PORT_ADDRESS).unwrap();
-    serial_port.write_bytes(HELLO);
+
+    println!("-- Memory regions info ---");
+    boot_info.memory_regions.iter().for_each(|item| {
+        let (start, end) = (item.start, item.end);
+        let kind = item.kind;
+
+        println!("Kind: {:?}, start = {:#x}, end = {:#x}", kind, start, end);
+    });
 
     loop {}
 }

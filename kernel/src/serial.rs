@@ -1,5 +1,9 @@
+use core::fmt;
+use spin::Mutex;
+use core::cell::OnceCell;
 use x86::io::{inb, outb};
 
+#[derive(Copy, Clone)]
 pub struct SerialPort {
     port: u16,
 }
@@ -52,4 +56,32 @@ impl SerialPort {
             self.write_byte(*char)
         }
     }
+}
+
+impl core::fmt::Write for SerialPort {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.write_bytes(s.as_bytes());
+
+        Ok(())
+    }
+}
+
+
+pub static WRITER: Mutex<OnceCell<SerialPort>> = Mutex::new(OnceCell::new());
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::serial::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    WRITER.lock().get_mut().unwrap().write_fmt(args).unwrap();
 }
