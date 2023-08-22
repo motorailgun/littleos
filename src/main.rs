@@ -17,6 +17,9 @@ fn main() {
     // set serial
     cmd.arg("-serial").arg("mon:stdio");
 
+    // set memory size
+    cmd.arg("-m").arg("1024");
+
     let mut child = cmd.spawn().unwrap();
     child.wait().unwrap();
 }
