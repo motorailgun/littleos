@@ -5,6 +5,14 @@ mod serial;
 use core::panic::PanicInfo;
 const SERIAL_PORT_ADDRESS: u16 = 0x3f8;
 
+const BOOTLOADER_CONFIG: bootloader_api::BootloaderConfig = {
+    let mut config = bootloader_api::BootloaderConfig::new_default();
+
+    // set memory offset as 16TiB
+    config.mappings.physical_memory = Some(bootloader_api::config::Mapping::FixedAddress(0x10 << 40));
+    config
+};
+
 #[panic_handler]
 pub fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -26,4 +34,4 @@ fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     loop {}
 }
 
-bootloader_api::entry_point!(kernel_entry);
+bootloader_api::entry_point!(kernel_entry, config = &BOOTLOADER_CONFIG);
