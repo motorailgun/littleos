@@ -76,6 +76,13 @@ fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
             (largest_region.end + physical_memory_offset) as usize)
     };
 
+
+    let mut x = Vec::<usize>::new();
+    x.push(1);
+    x.push(2);
+
+    println!("{:?}", x);
+
     loop {}
 }
 
