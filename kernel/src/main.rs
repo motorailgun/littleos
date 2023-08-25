@@ -5,6 +5,7 @@
 
 mod serial;
 mod allocator;
+mod pci;
 
 extern crate alloc;
 
@@ -94,6 +95,11 @@ fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     init_memory_allocator(boot_info.physical_memory_offset.as_ref(),
                           &boot_info.memory_regions);
     test_memory_alloc();
+
+    let pci_devices = unsafe { pci::pcie_list_device() };
+    pci_devices.iter().for_each(|device| {
+        println!("pci device: vendor id: {:#x}, device id: {:#x}", device.0, device.1);
+    });
 
     loop {}
 }
