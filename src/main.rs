@@ -20,6 +20,9 @@ fn main() {
     // set memory size
     cmd.arg("-m").arg("1024");
 
+    // add intel e1000
+    cmd.arg("-nic").arg("user,ipv6=off,model=e1000");
+
     let mut child = cmd.spawn().unwrap();
     child.wait().unwrap();
 }
