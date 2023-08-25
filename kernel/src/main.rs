@@ -35,27 +35,30 @@ fn on_oom(_layout: Layout) -> ! {
     loop {}
 }
 
-fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
+fn init_serial() {
     serial::WRITER.lock().get_or_init(|| serial::new(SERIAL_PORT_ADDRESS).unwrap());
     println!("\n\n\tHello World!\n\n");
+}
 
-
+fn print_memory_regions(memory_regions: &bootloader_api::info::MemoryRegions) {
     println!("-- Memory regions info ---");
-    boot_info.memory_regions.iter().for_each(|item| {
+    memory_regions.iter().for_each(|item| {
         let (start, end) = (item.start, item.end);
         let kind = item.kind;
 
         println!("Kind: {:?}, start = {:#x}, end = {:#x}", kind, start, end);
     });
+}
 
-    let physical_memory_offset = match boot_info.physical_memory_offset.as_ref() {
+fn init_memory_allocator(maybe_offset: Option<&u64>, memory_regions: &bootloader_api::info::MemoryRegions) {
+    let physical_memory_offset = match maybe_offset {
         Some(offset) => *offset,
         None => 0,
     };
 
     println!("physical memory offset address: {:#x}", physical_memory_offset);
 
-    let largest_region = boot_info.memory_regions.iter().filter(|region| {
+    let largest_region = memory_regions.iter().filter(|region| {
             match region.kind {
                 bootloader_api::info::MemoryRegionKind::Usable => true,
                 _ => false,
@@ -75,13 +78,22 @@ fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
             (largest_region.start + physical_memory_offset) as usize, 
             (largest_region.end + physical_memory_offset) as usize)
     };
+}
 
-
+fn test_memory_alloc() {
     let mut x = Vec::<usize>::new();
     x.push(1);
     x.push(2);
 
     println!("{:?}", x);
+}
+
+fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
+    init_serial();
+    print_memory_regions(&boot_info.memory_regions);
+    init_memory_allocator(boot_info.physical_memory_offset.as_ref(),
+                          &boot_info.memory_regions);
+    test_memory_alloc();
 
     loop {}
 }
