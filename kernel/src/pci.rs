@@ -1,6 +1,13 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
+pub struct PCIDevice {
+    bus: u8,
+    slot: u8,
+    pub device: u16,
+    pub vendor: u16,
+}
+
 pub unsafe fn pci_config_read_word(bus: u8, slot: u8, func: u8, offset: u8) -> u16 {
     let l_bus = (bus as u32) << 16;
     let l_slot = (slot as u32) << 11;
@@ -13,21 +20,29 @@ pub unsafe fn pci_config_read_word(bus: u8, slot: u8, func: u8, offset: u8) -> u
     (0xffff & (x86::io::inl(0xcfc) >> ((offset & 2) * 8))) as u16
 }
 
-pub unsafe fn pcie_list_device() -> Vec<(u16, u16)> {
-    let mut devices: Vec<(u16, u16)> = Vec::new();
+unsafe fn get_pci_device(bus: u8, slot: u8) -> Option<PCIDevice> {
+    let vendor = pci_config_read_word(bus, slot, 0, 0);
+    let device = pci_config_read_word(bus, slot, 0, 2);
+    if vendor == 0xffff {return None;}
+
+    Some(PCIDevice { bus, slot, device, vendor})
+}
+
+pub unsafe fn pcie_list_device() -> Vec<PCIDevice> {
+    let mut devices: Vec<PCIDevice> = Vec::new();
 
     for bus in (0..).into_iter() {
-        let mut flag = false;
-        for slot in (0..).into_iter() {
-            let vendor = pci_config_read_word(bus, slot, 0, 0);
-            let device = pci_config_read_word(bus, slot, 0, 2);
-
-            if vendor == 0xffff {flag = true; break;}
-
-            devices.push((vendor, device));
+        match get_pci_device(bus, 0) {
+            Some(_) => {
+                for slot in (0..).into_iter() {
+                    match get_pci_device(bus, slot) {
+                        Some(dev) => devices.push(dev),
+                        None => break,
+                    }
+                }
+            },
+            None => break,
         }
-
-        if flag {break;}
     }
 
     devices

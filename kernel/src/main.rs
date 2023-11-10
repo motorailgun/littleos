@@ -98,7 +98,7 @@ fn kernel_entry(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
 
     let pci_devices = unsafe { pci::pcie_list_device() };
     pci_devices.iter().for_each(|device| {
-        println!("pci device: vendor id: {:#x}, device id: {:#x}", device.0, device.1);
+        println!("pci device: vendor id: {:#x}, device id: {:#x}", device.vendor, device.device);
     });
 
     loop {}
